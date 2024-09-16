@@ -1,0 +1,15 @@
+pillow
+pydantic
+lxml
+matplotlib
+unstructured-pytesseract
+langchain_core
+langchain_openai
+langchain
+chromadb
+langchain_community
+fastapi
+python-dotenv
+
+
+-e .

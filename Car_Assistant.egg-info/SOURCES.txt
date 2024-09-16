@@ -1,0 +1,7 @@
+setup.py
+Car_Assistant.egg-info/PKG-INFO
+Car_Assistant.egg-info/SOURCES.txt
+Car_Assistant.egg-info/dependency_links.txt
+Car_Assistant.egg-info/top_level.txt
+src/__init__.py
+src/tataMain/__init__.py

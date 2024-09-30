@@ -1,3 +1,7 @@
 tata/
 .env
 logs/
+extracted_data/
+__pycache__/
+experiment/extracted_data/
+D:\tata\__pycache__/

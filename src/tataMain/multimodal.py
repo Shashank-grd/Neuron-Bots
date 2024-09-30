@@ -3,20 +3,19 @@ import uuid
 from langchain_core.runnables import RunnableLambda, RunnablePassthrough
 from langchain.retrievers.multi_vector import MultiVectorRetriever
 from langchain.storage import InMemoryStore
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_core.documents import Document
 from langchain_openai import AzureOpenAIEmbeddings,AzureChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
-from langchain_core.prompts import ChatPromptTemplate
 import io
 import re
-from IPython.display import HTML, display
 from src.tataMain.summary import  *
 from PIL import Image
 import os
 from dotenv import load_dotenv
-
 from src.tataMain.logger import logging
+
+
 
 logging.info("Multimodal Start")
 
@@ -146,7 +145,7 @@ def split_image_text_types(docs):
         if isinstance(doc, Document):
             doc = doc.page_content
         if looks_like_base64(doc) and is_image_data(doc):
-            doc = resize_base64_image(doc, size=(1300, 600))
+            doc = resize_base64_image(doc, size=(600, 300))
             b64_images.append(doc)
         else:
             texts.append(doc)
@@ -155,52 +154,56 @@ def split_image_text_types(docs):
 
 logging.info("Image prompt function")
 def img_prompt_func(inputs):
-    """
-    Join the context into a single string and create messages for multimodal RAG.
-    Limit to the last 3 user and 3 model messages to reduce token size.
-    """
-    # Extract the last 3 user texts
-    formatted_texts = "\n".join(inputs["context"]["texts"][-3:])
-
+    # Limit the number of texts and reduce their content
+    max_texts = 2
+    max_text_length = 500  
+    formatted_texts = "\n".join(
+        text[:max_text_length] + "..." if len(text) > max_text_length else text
+        for text in inputs["context"]["texts"][-max_texts:]
+    )
+    
     messages = []
-
-    # Adding the last 3 images (if present)
+    
+    # Limit the number of images
+    max_images = 1
     if "images" in inputs["context"] and inputs["context"]["images"]:
-        recent_images = inputs["context"]["images"][-3:]  # Limit to last 3 images
+        recent_images = inputs["context"]["images"][-max_images:]
         for image in recent_images:
             image_message = {
                 "role": "system",
                 "content": f"data:image/jpeg;base64,{image}",
             }
             messages.append(image_message)
-
-    # Adding the user-provided question and last 3 text inputs for context
+    
+    # Shorten the system message
     text_message = {
         "role": "system",
         "content": (
             "You are a helpful Car assistant.\n"
             "You will be given a mix of information (text and/or images).\n"
             "Use this information to provide relevant details to the user's question.\n"
-            "Use only the provided information and say 'I don't know' if the answer is not clear.\n"
+            "Use information that is given and give answer within the domain of vechile\n"
+            "give simple answer and to the point \n"
             f"User-provided question: {inputs['question']}\n\n"
-            "Recent Text and/or tables:\n"
+            "Text and/or tables:\n"
             f"{formatted_texts}"
         ),
     }
     messages.append(text_message)
-
+    print(messages)
     return messages
 
+
 logging.info("Multi Modal Rag chain")
+
 def multi_modal_rag_chain(retriever):
     """
-    Multi-modal RAG chain
+    Multi-modal RAG chain with memory
     """
 
     # Multi-modal LLM
-    model = AzureChatOpenAI(temperature=0.5, model="gpt-4o", max_tokens=3000) 
-
-
+    model = AzureChatOpenAI(temperature=0.5, model="gpt-4o", max_tokens=3000)
+    
     # RAG pipeline
     chain = (
         {
@@ -211,11 +214,10 @@ def multi_modal_rag_chain(retriever):
         | model
         | StrOutputParser()
     )
-
     return chain
 
-
 logging.info("Multimodal End")
+
 
 
 

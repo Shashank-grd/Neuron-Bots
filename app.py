@@ -10,13 +10,13 @@ from src.tataMain.logger import logging
 
 app = FastAPI()
 
-# Add CORS middleware
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["*"],  
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
-    allow_headers=["*"],  # Allows all headers
+    allow_methods=["*"],  
+    allow_headers=["*"], 
 )
 
 logging.info("Calling Multimodal rag")
@@ -24,7 +24,7 @@ logging.info("Calling Multimodal rag")
 chain_multimodal_rag = multi_modal_rag_chain(retriever_multi_vector_img)
 
 
-def i_encode_image(image_bytes: bytes) -> str:
+def i_encode_image(image_bytes: bytes) :
     """Encode image bytes to base64 string"""
     return base64.b64encode(image_bytes).decode("utf-8")
 
@@ -48,15 +48,15 @@ def i_image_summarize(img_base64: str, prompt: str) -> str:
     )
     return msg.content
 
-def generate_input_img_summary(image_bytes: bytes) -> tuple:
+def generate_input_img_summary(image_bytes: bytes) :
     """
     Generate a summary and base64 encoded string for a single image
     image_bytes: Bytes of the image file
     """
     prompt = """You are an assistant tasked with summarizing images for retrieval. \
-    These summaries will be embedded and used to retrieve the raw image. \
+    These summaries will be used to retrieve the raw image. \
     Give a concise summary of the image that is well optimized for retrieval."""
-    
+
     # Encode the image to base64
     cbase64_image = i_encode_image(image_bytes)
 
@@ -81,8 +81,6 @@ async def process_query(query: str = Form(...), file: UploadFile = File(None)):
     else:
         # If no file, just process the query
         response = chain_multimodal_rag.invoke(query)
-
-    # The response is now a string, so we can return it directly
     logging.info("Send Api Response")
     return JSONResponse(content={"response": response})
 

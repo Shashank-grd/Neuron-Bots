@@ -10,6 +10,7 @@ chromadb
 langchain_community
 fastapi
 python-dotenv
-
+langchain_chroma
+uvicorn
 
 -e .
